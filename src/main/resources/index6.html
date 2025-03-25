@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizBot Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-width: 240px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --hover-color: #e9f5ff;
+            --settings-item-bg: #f8f9fa;
+        }
+
+        .dark-mode {
+            --bg-color: #1a1a2e;
+            --text-color: #ffffff;
+            --card-bg: #16213e;
+            --sidebar-bg: #0f3460;
+            --hover-color: #1e3a8a;
+            --settings-item-bg: #2d3748;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: var(--transition);
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 70px;
+        }
+
+        .sidebar.collapsed .nav-text,
+        .sidebar.collapsed .profile-name,
+        .sidebar.collapsed .science-description {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: var(--transition);
+            padding: 20px;
+        }
+
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .card {
+            background: var(--card-bg);
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .module-item, .question-item, .science-item {
+            border-left: 4px solid #0d6efd;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .module-item:hover, .question-item:hover, .science-item:hover {
+            transform: translateX(5px);
+            background-color: var(--hover-color);
+        }
+
+        .key-badge {
+            font-family: monospace;
+            background-color: #e9ecef;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dark-mode .key-badge {
+            background-color: #2d3748;
+            color: white;
+        }
+
+        .key-badge:hover {
+            background-color: #dee2e6;
+        }
+
+        .dark-mode .key-badge:hover {
+            background-color: #4a5568;
+        }
+
+        .profile-section {
+            margin-top: auto;
+            padding: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .dark-mode .profile-section {
+            border-top-color: #444c56;
+        }
+
+        .collapse-btn {
+            margin-top: auto;
+        }
+
+        .emoji {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        .dark-mode .sidebar .nav-link,
+        .dark-mode .sidebar .profile-name,
+        .dark-mode .card,
+        .dark-mode .card-title,
+        .dark-mode .card-text,
+        .dark-mode .text-muted,
+        .dark-mode .list-group-item {
+            color: white !important;
+        }
+
+        .dark-mode .sidebar .nav-link:hover {
+            background-color: var(--hover-color);
+        }
+
+        .copy-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .science-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem;
+        }
+
+        .dark-mode .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .dark-mode .modal-header,
+        .dark-mode .modal-footer {
+            border-color: #444c56;
+        }
+
+        .dark-mode .form-control,
+        .dark-mode .form-select {
+            background-color: #2d3748;
+            color: white;
+            border-color: #4a5568;
+        }
+
+        .science-description {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+            width: 80%;
+        }
+
+        .dark-mode .science-description {
+            color: #adb5bd;
+        }
+
+        .settings-item {
+            background-color: var(--settings-item-bg);
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .dark-mode .settings-item {
+            background-color: #2d3748;
+        }
+
+        /* Wheel animation */
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 50px auto;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            border: 10px solid #333;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            transform: rotate(0deg);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .wheel-item {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: bottom right;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid #ff0000;
+            z-index: 10;
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
+        }
+
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 10px auto;
+            border: 2px solid #0d6efd;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .question-details {
+            display: none;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 3px solid #0d6efd;
+        }
+
+        .dark-mode .question-details {
+            background-color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+<!-- Copy Notification -->
+<div class="copy-notification" id="copyNotification">
+    Key copied to clipboard!
+</div>
+
+<!-- Sidebar -->
+<nav class="sidebar shadow">
+    <div class="p-2 text-center">
+        <a href="https://my-portfolio-rho-tan-12.vercel.app/" target="_blank" class="logo-container">
+            <img src="https://via.placeholder.com/50" alt="H-logo" id="logoImg">
+        </a>
+        <div class="d-flex align-items-center justify-content-center p-2">
+            <i class="fas fa-user-circle emoji" style="font-size: 2rem;"></i>
+            <span class="profile-name ms-2">John Doe</span>
+        </div>
+    </div>
+
+    <ul class="nav flex-column px-2">
+        <li class="nav-item mb-2">
+            <button class="nav-link btn text-start w-100" onclick="showPage('sciences')">
+                <i class="fas fa-flask emoji"></i> <span class="nav-text">Sciences</span>
+            </button>
+        </li>
+        <li class="nav-item mb-2">
+            <button class="nav-link btn text-start w-100" onclick="showPage('mock')">
+                <i class="fas fa-graduation-cap emoji"></i> <span class="nav-text">Mock</span>
+            </button>
+        </li>
+        <li class="nav-item mb-2">
+            <button class="nav-link btn text-start w-100" onclick="showPage('settings')">
+                <i class="fas fa-cog emoji"></i> <span class="nav-text">Settings</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link btn text-start w-100" onclick="toggleDarkMode()">
+                <i class="fas fa-moon emoji"></i> <span class="nav-text">Dark Mode</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="collapse-btn p-2 text-center">
+        <button class="btn w-100" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i> <span class="nav-text">Collapse</span>
+        </button>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Sciences Page -->
+    <div id="sciencesPage" class="page-content active">
+        <div class="d-flex justify-content-between mb-4">
+            <h4><i class="fas fa-flask me-2"></i> Sciences</h4>
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScienceModal">
+                    <i class="fas fa-plus"></i> Add Science
+                </button>
+            </div>
+        </div>
+
+        <!-- Default Sciences -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card shadow-sm science-item">
+                    <div class="card-body">
+                        <h5 class="card-title">Mathematics</h5>
+                        <p class="science-description">Study of numbers, quantities, shapes, and patterns through logical reasoning and computation.</p>
+                        <button class="btn btn-sm btn-info science-btn" onclick="showPage('modules')">
+                            <i class="fas fa-arrow-right"></i> View Modules
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm science-item">
+                    <div class="card-body">
+                        <h5 class="card-title">Physics</h5>
+                        <p class="science-description">Study of matter, energy, and the fundamental forces of nature through observation and experiment.</p>
+                        <button class="btn btn-sm btn-info science-btn" onclick="showPage('modules')">
+                            <i class="fas fa-arrow-right"></i> View Modules
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm science-item">
+                    <div class="card-body">
+                        <h5 class="card-title">Chemistry</h5>
+                        <p class="science-description">Study of substances, their properties, reactions, and the energy changes that accompany them.</p>
+                        <button class="btn btn-sm btn-info science-btn" onclick="showPage('modules')">
+                            <i class="fas fa-arrow-right"></i> View Modules
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modules Page -->
+    <div id="modulesPage" class="page-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <button class="btn btn-outline-secondary me-2" onclick="showPage('sciences')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <h4 class="d-inline-block"><i class="fas fa-book me-2"></i> Mathematics Modules</h4>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
+                <i class="fas fa-plus"></i> Add Module
+            </button>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="module-item p-3 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">1. Algebra Basics</h6>
+                            <small class="key-badge p-1 rounded" onclick="copyToClipboard(this)">Key: 123456789</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#editModuleModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteModuleModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="showPage('questions')">
+                                <i class="fas fa-arrow-right"></i> View Questions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-item p-3 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">2. Geometry Fundamentals</h6>
+                            <small class="key-badge p-1 rounded" onclick="copyToClipboard(this)">Key: 987654321</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#editModuleModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteModuleModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="showPage('questions')">
+                                <i class="fas fa-arrow-right"></i> View Questions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions Page -->
+    <div id="questionsPage" class="page-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <button class="btn btn-outline-secondary me-2" onclick="showPage('modules')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <h4 class="d-inline-block"><i class="fas fa-question-circle me-2"></i> Algebra Basics Questions</h4>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                <i class="fas fa-plus"></i> Add Question
+            </button>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="question-item p-3 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">1. What is 2+2?</h6>
+                            <small class="text-muted">Correct answer: 4</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary me-2" onclick="toggleQuestionDetails(this)">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#editQuestionModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="question-details">
+                        <p><strong>Question:</strong> What is 2+2?</p>
+                        <p><strong>Options:</strong></p>
+                        <ul>
+                            <li>A) 3</li>
+                            <li class="text-success">B) 4 (Correct Answer)</li>
+                            <li>C) 5</li>
+                        </ul>
+                        <p><strong>Explanation:</strong> Basic arithmetic addition of two numbers.</p>
+                    </div>
+                </div>
+
+                <div class="question-item p-3 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">2. Solve for x: 2x = 10</h6>
+                            <small class="text-muted">Correct answer: 5</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary me-2" onclick="toggleQuestionDetails(this)">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#editQuestionModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="question-details">
+                        <p><strong>Question:</strong> Solve for x: 2x = 10</p>
+                        <p><strong>Options:</strong></p>
+                        <ul>
+                            <li>A) 3</li>
+                            <li>B) 4</li>
+                            <li class="text-success">C) 5 (Correct Answer)</li>
+                        </ul>
+                        <p><strong>Explanation:</strong> Divide both sides by 2 to isolate x.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mock Page -->
+    <div id="mockPage" class="page-content">
+        <div class="d-flex justify-content-between mb-4">
+            <h4><i class="fas fa-graduation-cap me-2"></i> Mock Tests</h4>
+            <div>
+                <button class="btn btn-primary" onclick="showPage('quizWheel')">
+                    <i class="fas fa-play"></i> Start Quiz
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-calculator me-2"></i>Math Final Exam</h5>
+                        <p class="card-text">50 questions | 120 minutes</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary">Difficulty: Medium</span>
+                            <button class="btn btn-sm btn-success">Start</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-atom me-2"></i>Physics Midterm</h5>
+                        <p class="card-text">30 questions | 90 minutes</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-warning text-dark">Difficulty: Hard</span>
+                            <button class="btn btn-sm btn-success">Start</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-flask me-2"></i>Chemistry Quiz</h5>
+                        <p class="card-text">20 questions | 60 minutes</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-success">Difficulty: Easy</span>
+                            <button class="btn btn-sm btn-success">Start</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Wheel Page -->
+    <div id="quizWheelPage" class="page-content text-center">
+        <h3 class="mb-4"><i class="fas fa-gamepad me-2"></i> Quiz Wheel</h3>
+        <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <div class="wheel" id="wheel">
+                <!-- Wheel items will be added by JavaScript -->
+            </div>
+        </div>
+        <button class="btn btn-primary btn-lg mt-4" onclick="spinWheel()">
+            <i class="fas fa-play me-2"></i> Start Spin
+        </button>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="settingsPage" class="page-content">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4><i class="fas fa-cog me-2"></i> Settings</h4>
+
+                <div class="mb-4">
+                    <h5 class="mb-3"><i class="fas fa-user me-2"></i>Account Settings</h5>
+                    <div class="list-group">
+                        <div class="list-group-item settings-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-language me-2"></i>
+                                Language
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#languageModal">
+                                Change
+                            </button>
+                        </div>
+                        <div class="list-group-item settings-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-phone me-2"></i>
+                                Phone Number
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#phoneModal">
+                                Change
+                            </button>
+                        </div>
+                        <div class="list-group-item settings-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-envelope me-2"></i>
+                                Email
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#emailModal">
+                                Change
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h5 class="mb-3"><i class="fas fa-lock me-2"></i>Security</h5>
+                    <div class="list-group">
+                        <div class="list-group-item settings-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-key me-2"></i>
+                                Change Password
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                                Change
+                            </button>
+                        </div>
+                        <div class="list-group-item settings-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-bell me-2"></i>
+                                Notification Settings
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#notificationModal">
+                                Configure
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- All Modals -->
+<!-- Science Modal -->
+<div class="modal fade" id="addScienceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Science</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Science Name</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Module Modals -->
+<div class="modal fade" id="addModuleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Module</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Module Number</label>
+                        <input type="number" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module Name</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module Key</label>
+                        <input type="text" class="form-control" value="123456789" readonly>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Module</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModuleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Module</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Module Number</label>
+                        <input type="number" class="form-control" min="1" value="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module Name</label>
+                        <input type="text" class="form-control" value="Algebra Basics" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module Key</label>
+                        <input type="text" class="form-control" value="123456789" readonly>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModuleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Module</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this module? All questions in this module will also be deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question Modals -->
+<div class="modal fade" id="addQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Question</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Options</label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" placeholder="Option 1">
+                            <div class="input-group-text">
+                                <input class="form-check-input" type="radio" name="correctAnswer" checked>
+                            </div>
+                        </div>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" placeholder="Option 2">
+                            <div class="input-group-text">
+                                <input class="form-check-input" type="radio" name="correctAnswer">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOptionField(this)">
+                            <i class="fas fa-plus"></i> Add Option
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Explanation</label>
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Question</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Question</label>
+                        <input type="text" class="form-control" value="What is 2+2?" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Options</label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" value="3">
+                            <div class="input-group-text">
+                                <input class="form-check-input" type="radio" name="correctAnswer">
+                            </div>
+                        </div>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" value="4">
+                            <div class="input-group-text">
+                                <input class="form-check-input" type="radio" name="correctAnswer" checked>
+                            </div>
+                        </div>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" value="5">
+                            <div class="input-group-text">
+                                <input class="form-check-input" type="radio" name="correctAnswer">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOptionField(this)">
+                            <i class="fas fa-plus"></i> Add Option
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Explanation</label>
+                        <textarea class="form-control" rows="3">Basic arithmetic addition of two numbers.</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this question?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modals -->
+<div class="modal fade" id="languageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Language</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <select class="form-select">
+                    <option>English</option>
+                    <option>Uzbek</option>
+                    <option>Russian</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="phoneModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Phone Number</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="tel" class="form-control" placeholder="+998 XX XXX XX XX">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="emailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Email</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="email" class="form-control" placeholder="example@mail.com">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Current Password</label>
+                    <input type="password" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">New Password</label>
+                    <input type="password" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Confirm New Password</label>
+                    <input type="password" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Notification Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                    <label class="form-check-label" for="emailNotifications">Email Notifications</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="pushNotifications" checked>
+                    <label class="form-check-label" for="pushNotifications">Push Notifications</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="smsNotifications">
+                    <label class="form-check-label" for="smsNotifications">SMS Notifications</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Initialize all modals
+    const modalInstances = {
+        addScience: new bootstrap.Modal(document.getElementById('addScienceModal')),
+        addModule: new bootstrap.Modal(document.getElementById('addModuleModal')),
+        editModule: new bootstrap.Modal(document.getElementById('editModuleModal')),
+        deleteModule: new bootstrap.Modal(document.getElementById('deleteModuleModal')),
+        addQuestion: new bootstrap.Modal(document.getElementById('addQuestionModal')),
+        editQuestion: new bootstrap.Modal(document.getElementById('editQuestionModal')),
+        deleteQuestion: new bootstrap.Modal(document.getElementById('deleteQuestionModal')),
+        language: new bootstrap.Modal(document.getElementById('languageModal')),
+        phone: new bootstrap.Modal(document.getElementById('phoneModal')),
+        email: new bootstrap.Modal(document.getElementById('emailModal')),
+        password: new bootstrap.Modal(document.getElementById('passwordModal')),
+        notification: new bootstrap.Modal(document.getElementById('notificationModal'))
+    };
+
+    // Initialize wheel with subjects
+    const subjects = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'Literature', 'Computer Science'];
+    const wheel = document.getElementById('wheel');
+
+    subjects.forEach((subject, index) => {
+        const angle = (360 / subjects.length) * index;
+        const item = document.createElement('div');
+        item.className = 'wheel-item';
+        item.style.transform = `rotate(${angle}deg)`;
+        item.style.backgroundColor = getRandomColor();
+        item.textContent = subject;
+        wheel.appendChild(item);
+    });
+
+    function spinWheel() {
+        const randomDegree = 1440 + Math.floor(Math.random() * 360); // 4 full rotations + random
+        wheel.style.transform = `rotate(${-randomDegree}deg)`;
+    }
+
+    function getRandomColor() {
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // Page navigation
+    function showPage(pageId) {
+        document.querySelectorAll('.page-content').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(pageId + 'Page').classList.add('active');
+    }
+
+    // Sidebar toggle
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('collapsed');
+
+        // Update collapse button text
+        const collapseBtn = document.querySelector('.collapse-btn .nav-text');
+        if (sidebar.classList.contains('collapsed')) {
+            collapseBtn.style.display = 'none';
+        } else {
+            collapseBtn.style.display = 'inline';
+        }
+    }
+
+    // Dark mode toggle
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    }
+
+    // Check if dark mode was enabled before
+    if(localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+
+    // Generate 9-digit module key
+    function generateModuleKey() {
+        return Math.floor(100000000 + Math.random() * 900000000).toString();
+    }
+
+    // Copy key to clipboard
+    function copyToClipboard(element) {
+        const key = element.textContent.replace('Key: ', '');
+        navigator.clipboard.writeText(key).then(() => {
+            const notification = document.getElementById('copyNotification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        });
+    }
+
+    // Add option field to question form
+    function addOptionField(button) {
+        const optionsContainer = button.parentElement;
+        const optionCount = optionsContainer.querySelectorAll('.input-group').length + 1;
+
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+                <input type="text" class="form-control" placeholder="Option ${optionCount}">
+                <div class="input-group-text">
+                    <input class="form-check-input" type="radio" name="correctAnswer">
+                </div>
+            `;
+
+        optionsContainer.insertBefore(div, button);
+    }
+
+    // Toggle question details
+    function toggleQuestionDetails(button) {
+        const questionItem = button.closest('.question-item');
+        const details = questionItem.querySelector('.question-details');
+        details.style.display = details.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Initialize module key when adding new module
+    document.getElementById('addModuleModal').addEventListener('show.bs.modal', function() {
+        this.querySelector('input[type="text"][readonly]').value = generateModuleKey();
+    });
+
+    // Set logo image
+    document.getElementById('logoImg').src = 'H-logo.png';
+</script>
+</body>
+</html>

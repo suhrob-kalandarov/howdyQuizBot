@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizBot Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-width: 240px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+        }
+
+        .dark-mode {
+            --bg-color: #1a1a2e;
+            --text-color: #ffffff;
+            --card-bg: #16213e;
+            --sidebar-bg: #0f3460;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            transition: var(--transition);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .nav-text {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: var(--transition);
+        }
+
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .card {
+            background: var(--card-bg);
+            transition: var(--transition);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .module-item {
+            border-left: 4px solid #0d6efd;
+            transition: all 0.2s;
+        }
+
+        .module-item:hover {
+            transform: translateX(5px);
+        }
+
+        .key-badge {
+            font-family: monospace;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+    </style>
+</head>
+<body>
+<!-- Sidebar -->
+<nav class="sidebar shadow position-fixed h-100">
+    <div class="p-2 text-center">
+        <button class="btn w-100 mb-3" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <ul class="nav flex-column px-2">
+        <li class="nav-item mb-2">
+            <button class="nav-link btn text-start w-100" onclick="showPage('sciences')">
+                <i class="fas fa-flask"></i> <span class="nav-text">Sciences</span>
+            </button>
+        </li>
+        <li class="nav-item mb-2">
+            <button class="nav-link btn text-start w-100" onclick="showPage('mock')">
+                <i class="fas fa-graduation-cap"></i> <span class="nav-text">Mock</span>
+            </button>
+        </li>
+        <li class="nav-item mb-2">
+            <button class="nav-link btn text-start w-100" onclick="showPage('settings')">
+                <i class="fas fa-cog"></i> <span class="nav-text">Settings</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link btn text-start w-100" onclick="toggleDarkMode()">
+                <i class="fas fa-moon"></i> <span class="nav-text">Dark Mode</span>
+            </button>
+        </li>
+    </ul>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Sciences Page -->
+    <div id="sciencesPage" class="page-content active p-3">
+        <div class="d-flex justify-content-between mb-4">
+            <h4>Sciences</h4>
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScienceModal">
+                    <i class="fas fa-plus"></i> Add Science
+                </button>
+            </div>
+        </div>
+
+        <!-- Default Sciences -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Mathematics</h5>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editScienceModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteScienceModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="showPage('modules')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Physics</h5>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editScienceModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteScienceModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="showPage('modules')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Chemistry</h5>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editScienceModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteScienceModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="showPage('modules')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modules Page -->
+    <div id="modulesPage" class="page-content p-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <button class="btn btn-outline-secondary me-2" onclick="showPage('sciences')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <h4 class="d-inline-block">Modules</h4>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
+                <i class="fas fa-plus"></i> Add Module
+            </button>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Mathematics Modules</h5>
+
+                <div class="module-item p-3 mb-3 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">1. Algebra Basics</h6>
+                            <small class="text-muted key-badge p-1 rounded">Key: qwe2rty232uio3o</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#editModuleModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModuleModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-item p-3 mb-3 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">2. Geometry Fundamentals</h6>
+                            <small class="text-muted key-badge p-1 rounded">Key: asd3fgh456jkl7</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#editModuleModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModuleModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-item p-3 mb-3 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">3. Calculus Introduction</h6>
+                            <small class="text-muted key-badge p-1 rounded">Key: zxc8vbn901m2w</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#editModuleModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModuleModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other pages (Mock, Settings) remain the same as previous version -->
+</main>
+
+<!-- Science Modals -->
+<div class="modal fade" id="addScienceModal" tabindex="-1">
+    <!-- Add Science Modal Content -->
+</div>
+
+<div class="modal fade" id="editScienceModal" tabindex="-1">
+    <!-- Edit Science Modal Content -->
+</div>
+
+<div class="modal fade" id="deleteScienceModal" tabindex="-1">
+    <!-- Delete Science Modal Content -->
+</div>
+
+<!-- Module Modals -->
+<div class="modal fade" id="addModuleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Module</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Module Number</label>
+                        <input type="number" class="form-control" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module Name</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module Key</label>
+                        <input type="text" class="form-control" value="auto-generated" disabled>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Module</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModuleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Module</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Module Number</label>
+                        <input type="number" class="form-control" min="1" value="1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module Name</label>
+                        <input type="text" class="form-control" value="Algebra Basics">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module Key</label>
+                        <input type="text" class="form-control" value="qwe2rty232uio3o">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModuleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Module</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this module? All questions in this module will also be deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Page navigation
+    function showPage(pageId) {
+        document.querySelectorAll('.page-content').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(pageId + 'Page').classList.add('active');
+    }
+
+    // Sidebar toggle
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('collapsed');
+    }
+
+    // Dark mode toggle
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    }
+
+    // Check if dark mode was enabled before
+    if(localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+
+    // Generate random key
+    function generateKey() {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let key = '';
+        for (let i = 0; i < 12; i++) {
+            key += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return key;
+    }
+
+    // Initialize all modals
+    const modals = new bootstrap.Modal(document.querySelectorAll('.modal'));
+</script>
+</body>
+</html>
